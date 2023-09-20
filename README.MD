@@ -277,9 +277,7 @@ List out what you aim to achieve with your custom firmware:
 
 Creating custom firmware for stealth operations is no small feat. It requires a blend of hardware knowledge, software development expertise, and a keen understanding of detection mechanisms. However, with diligence and persistence, you can craft firmware that operates under the radar, giving you an edge in the world of DMA hacking.
 
-### 8. **Delving deeper into custom firmware**
-
-## Custom Firmware for Stealth: Code Examples
+### 8. **Custom Firmware for Stealth: Code Examples**
 
 While the development of custom firmware is a complex process that can vary based on the specific DMA device and objectives, below are generalized code snippets and examples to provide a starting point based on the previously described steps:
 
