@@ -1,4 +1,4 @@
-# DMA Hacking Unity Games: An In-depth Guide
+# DMA Hacking Unity Games: An broad overview
 
 ## Table of Contents
 
