@@ -277,6 +277,123 @@ List out what you aim to achieve with your custom firmware:
 
 Creating custom firmware for stealth operations is no small feat. It requires a blend of hardware knowledge, software development expertise, and a keen understanding of detection mechanisms. However, with diligence and persistence, you can craft firmware that operates under the radar, giving you an edge in the world of DMA hacking.
 
+### 8. **Delving deeper into custom firmware**
+
+## Custom Firmware for Stealth: Code Examples
+
+While the development of custom firmware is a complex process that can vary based on the specific DMA device and objectives, below are generalized code snippets and examples to provide a starting point based on the previously described steps:
+
+### 1. **Understanding the Device's Architecture**
+
+Before we can write code, we need tools to analyze the existing firmware. While this isn't code for the firmware itself, tools like `Ghidra` can be used for disassembly:
+
+```bash
+# Using Ghidra (command line) to disassemble firmware
+ghidra_headless -import firmware.bin -scriptPath="path/to/script" -postScript disassemble.py
+```
+
+### 2. **Defining Stealth Objectives**
+
+This stage is primarily conceptual, so there's no direct code. However, you can outline your objectives in a design document or comments:
+
+```c
+/*
+Stealth Objectives:
+- Randomize memory access intervals between 10ms to 50ms.
+- Mask DMA device as a standard network card.
+*/
+```
+
+### 3. **Development Environment Setup**
+
+Setting up an environment might involve scripts to automate the build process:
+
+```bash
+# Compile firmware code
+gcc -o custom_firmware firmware.c
+
+# Run the firmware in an emulator for initial testing
+emulator -load custom_firmware
+```
+
+### 4. **Writing the Custom Firmware**
+
+Here's a simplified C-based pseudo-code for a DMA firmware:
+
+```c
+#include "dma_device.h"
+
+void initialize() {
+    // Initialize DMA device
+    DMA_Init();
+    
+    // Masquerade device ID
+    Device_SetID(NETWORK_CARD_ID);
+}
+
+void random_delay() {
+    int delay = rand() % 40 + 10;  // Random delay between 10ms to 50ms
+    sleep(delay);
+}
+
+void stealth_memory_access(void* address, void* data, int size) {
+    random_delay();
+    DMA_Read(address, data, size);
+}
+
+int main() {
+    initialize();
+
+    void* target_address = ...;  // Address to access
+    char buffer[256];
+
+    while(1) {
+        stealth_memory_access(target_address, buffer, sizeof(buffer));
+    }
+
+    return 0;
+}
+```
+
+### 5. **Testing & Iteration**
+
+Testing might involve scripts to compare expected and actual outcomes:
+
+```python
+# Python-based testing script
+import emulator
+
+def test_memory_access():
+    emu = emulator.load("custom_firmware")
+    result = emu.run()
+    assert result == expected_output, f"Expected {expected_output} but got {result}"
+
+test_memory_access()
+```
+
+### 6. **Flashing the Custom Firmware**
+
+Flashing tools often come with their command-line utilities:
+
+```bash
+# Backup original firmware
+backup_tool -save original_firmware_backup.bin
+
+# Flash custom firmware
+flash_tool -write custom_firmware
+```
+
+### 7. **Operational Best Practices**
+
+Maintain a log of your operations:
+
+```bash
+# Example logging script
+echo "Firmware flashed on $(date)" >> operations.log
+```
+
+These code snippets are generalized and represent a high-level view of the processes involved. The actual implementation would require a more in-depth understanding of the specific DMA device, its APIs, and the target system's architecture.
+
 [Back to Table of Contents](#dma-hacking-unity-games-an-in-depth-guide)
 
 ## Chapter 6: Extracting Game Data via DMA
