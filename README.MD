@@ -1,7 +1,6 @@
 Fix the github readme quicklinks:
 # DMA Hacking Unity Games: A broad overview
 
-<a id='table-of-contents'></a>
 ## Table of Contents
 
 - [Chapter 1: Introduction to Direct Memory Access (DMA)](#table-of-contents)
@@ -16,9 +15,6 @@ Fix the github readme quicklinks:
 - [Chapter 10: Miscellaneous Considerations & Advanced Topics in DMA Hacking](#chapter-9-challenges-and-pitfalls-in-dma-hacking)
 ---
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 1: Introduction to Direct Memory Access (DMA)
 
 Direct Memory Access, universally referred to as DMA, is a pivotal technology in modern computing, serving as the bridge that enables external devices to communicate directly with a system's main memory. This bypasses the central processing unit (CPU) and eliminates potential bottlenecks, thereby streamlining data transfer processes and increasing overall system efficiency.
@@ -71,9 +67,6 @@ In summary, Direct Memory Access is a technological marvel that has revolutioniz
 
 ---
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 2: Preliminary Knowledge
 
 Before diving into the technicalities of DMA hacking, especially in the context of Unity games, it's imperative to equip oneself with fundamental knowledge that will lay the groundwork for more advanced concepts.
@@ -104,9 +97,6 @@ Equipped with this preliminary knowledge, one can proceed to the tools and techn
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 3: Required Tools & Equipment
 
 Delving into DMA hacking, especially for Unity games, necessitates a set of tools and equipment to facilitate the process. These tools not only aid in understanding the game's memory layout but also enable the manipulation of in-game data.
@@ -137,9 +127,6 @@ With these tools and equipment at your disposal, the task of DMA hacking becomes
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 4: Identifying Offsets
 
 Offsets play a pivotal role in the realm of memory hacking. They represent the difference (or "offset") between the base address of a memory segment and the address of a particular piece of data within that segment. Identifying correct offsets ensures that you're targeting the right data structures within a game's memory, which is essential for effective DMA hacking. Here's a comprehensive guide on identifying offsets, especially in Unity games:
@@ -191,9 +178,6 @@ With both static and dynamic analysis at your disposal, you can begin mapping ou
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 5: Setting up DMA
 
 Once you've identified the relevant offsets and have a clear understanding of the game's memory structure, the next step is to set up Direct Memory Access (DMA) to begin the hacking process. Setting up DMA is pivotal, as it facilitates the direct interaction with the target system's memory. Here's a step-by-step guide on how to go about it:
@@ -411,9 +395,6 @@ These code snippets are generalized and represent a high-level view of the proce
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 6: Extracting Game Data via DMA
 
 With a stealthy DMA setup in place, the next crucial step is extracting game data. This chapter delves deep into the methods and nuances of data extraction using DMA, ensuring a comprehensive understanding of the process.
@@ -486,9 +467,6 @@ Extracting game data via DMA is both an art and a science. It requires a deep un
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 7: Modifying Game Data via DMA
 
 Having extracted game data via DMA, you're now in a powerful position to modify it. This chapter delves deep into the intricacies of altering in-game data, enabling you to influence game outcomes, bypass challenges, or even introduce new functionalities.
@@ -561,9 +539,6 @@ Modifying game data via DMA offers unparalleled power, turning the game's very m
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 8: Maintaining Stealth in DMA Operations
 
 In the realm of game hacking, stealth is paramount. Being detected not only nullifies your efforts but can also lead to repercussions, such as bans or account suspensions. This chapter dives deep into techniques and practices to maintain stealth during DMA operations, ensuring your activities remain under the radar.
@@ -638,9 +613,6 @@ In the cat-and-mouse game of hacking and anti-cheat systems, maintaining stealth
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 9: Challenges & Pitfalls in DMA Hacking
 
 DMA hacking, while powerful, is fraught with challenges and potential pitfalls. These obstacles can range from technical limitations to ever-evolving anti-cheat systems. This chapter delves into these challenges, offering insights and potential solutions to ensure a successful DMA hacking journey.
@@ -719,9 +691,6 @@ Confronting and navigating these challenges is an integral part of the DMA hacki
 
 [Back to Table of Contents](#chapter-10-miscellaneous-considerations-and-advanced-topics-in-dma-hacking)
 
-
-
-[Back to Table of Contents](#table-of-contents)
 ## Chapter 10: Miscellaneous Considerations & Advanced Topics in DMA Hacking
 
 The journey of DMA hacking, as detailed in the previous chapters, covers many facets of the process. However, the world of game hacking is vast, and some nuances and advanced topics deserve attention. Chapter 10 aims to shine a light on these areas, ensuring a comprehensive understanding of DMA hacking.
