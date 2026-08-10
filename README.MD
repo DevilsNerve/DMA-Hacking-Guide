@@ -1,4 +1,3 @@
-Fix the github readme quicklinks:
 # DMA Hacking Unity Games: A broad overview
 
 ## Table of Contents
