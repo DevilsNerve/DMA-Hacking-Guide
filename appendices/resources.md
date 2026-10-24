@@ -4,6 +4,8 @@
 
 References reviewed on **2026-10-23**. These are primary documentation sources. Follow documentation matching your installed version; a link to a current manual is not a compatibility guarantee for an older runtime.
 
+Chapter 15's additional Unicode, normalization, segmentation, and incremental-decoder references were reviewed on **2026-10-24**.
+
 ## Memory and platform behavior
 
 | Source | Read it for |
@@ -52,6 +54,8 @@ The optional Unity component is an instructional exercise, not a bundled or vali
 | [Python Unicode HOWTO](https://docs.python.org/3/howto/unicode.html) | Code points, encodings, and the distinction between text and bytes |
 | [Unicode 17 core specification, Chapter 3](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/) | Encoding forms, Unicode scalar values, and surrogate-pair rules; this is a pinned edition |
 | [Unicode normalization](https://unicode.org/reports/tr15/) | Canonical and compatibility normalization and their defined scope |
+| [Unicode text segmentation](https://unicode.org/reports/tr29/) | Default grapheme-cluster boundaries and the distinction from code-point counts |
+| [Python incremental decoders](https://docs.python.org/3/library/codecs.html#incrementaldecoder-objects) | State across contiguous chunks and finalization of incomplete encoded text |
 | [Python floating-point tutorial](https://docs.python.org/3/tutorial/floatingpoint.html) | Stored binary values, decimal presentation, and rounding |
 | [Python math.isclose](https://docs.python.org/3/library/math.html#math.isclose) | Relative and absolute tolerance semantics |
 | [Python unittest assertions](https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertRaises) | Testing expected exceptions and public outcomes |

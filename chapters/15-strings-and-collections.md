@@ -15,11 +15,19 @@
 Read the opening sections for the basic model, then use these detailed references as you work:
 
 - [Walk through every byte of an observation](#byte-walkthrough)
+- [Compare six text representations](#text-casebook)
 - [Choose a text-decoding contract](#unicode-decisions)
+- [Decode text across chunk boundaries](#streamed-text)
 - [Prove a variable-length range fits](#range-proof)
+- [Resolve boundary and overlap cases](#range-casebook)
 - [Handle arrays, lists, and linked structures](#collection-layouts)
+- [Decode alternative valid storage layouts](#storage-layouts)
+- [Walk an index chain with explicit limits](#bounded-traversal)
+- [Budget nested collections](#nested-budgets)
 - [Separate live lifetime from stored layout](#live-collections)
+- [Review a collection replacement timeline](#replacement-timeline)
 - [Diagnose three malformed observations](#diagnostic-lab)
+- [Run the complete decoder casebook](#decoder-casebook)
 - [Practice exercises and worked answers](#chapter-exercises)
 
 ## Move beyond one scalar
@@ -147,6 +155,61 @@ Its health is at `0x30 + 0x04 = 0x34`. The second entity's health is at `0x30 + 
 
 An off-by-one index of 3 would select an imaginary fourth entity at offset `0x60`, exactly where the valid file ends. The fact that this address is a clean multiple of sixteen does not make the record present.
 
+<a id="text-casebook"></a>
+## Compare six text representations
+
+The compass example is a useful starting point, but one string cannot expose every unit mistake. Compare these small values before writing a generic text helper. Escapes in the table identify the exact code points independently of a terminal's font.
+
+| Text | Code points | UTF-16 units | UTF-16 bytes | UTF-8 bytes | UTF-16 little-endian hex |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `A` | 1 | 1 | 2 | 1 | `41 00` |
+| `\u00E9` | 1 | 1 | 2 | 2 | `e9 00` |
+| `e\u0301` | 2 | 2 | 4 | 3 | `65 00 01 03` |
+| `\U0001F9ED` | 1 | 2 | 4 | 4 | `3e d8 ed dd` |
+| `A\x00B` | 3 | 3 | 6 | 3 | `41 00 00 00 42 00` |
+| `\uFEFFA` | 2 | 2 | 4 | 4 | `ff fe 41 00` |
+
+The last row means U+FEFF followed by `A`; it is not one code point named FEFFA. The table describes Python strings and their explicitly selected encodings. It does not treat a leading U+FEFF as an external header or strip an embedded NUL.
+
+Reproduce these values with:
+
+```sh
+python labs/collections_lab.py text
+```
+
+The [companion source](../labs/collections_lab.py) prints each exact escaped string, all four lengths, and the encoded bytes. This is a local calculation over synthetic text. It does not inspect a managed-runtime string object or assume a particular C++ string class layout.
+
+### Storage units do not count displayed characters
+
+The precomposed accent and the combining sequence can appear alike even though their code-point and byte counts differ. A user-facing cursor or truncation feature may need grapheme-cluster boundaries rather than individual code points. Unicode's [text-segmentation specification](https://unicode.org/reports/tr29/) defines default grapheme-cluster rules; rendering and application tailoring are separate concerns.
+
+For the binary decoder, use the unit declared by the schema. For a display preview, choose and name the presentation rule separately. A limit of 64 UTF-16 units is a storage limit. It is not automatically a promise of 64 visible characters, screen columns, or cursor movements.
+
+Do not derive byte size from a rendered label's width. Combining marks, supplementary characters, control characters, and font choices make that unreliable. Retain a byte length, code-unit count, and decoded string as distinct quantities when they serve different purposes.
+
+### Test a mixed-text boundary
+
+The name limit is 64 UTF-16 units. These four examples show how the same limit applies to different representations:
+
+| Label construction | Code points | UTF-16 units | Expected result |
+| --- | ---: | ---: | --- |
+| 64 copies of `A` | 64 | 64 | Accept |
+| 32 compass symbols | 32 | 64 | Accept |
+| 62 copies of `A`, then one compass | 63 | 64 | Accept |
+| 63 copies of `A`, then one compass | 64 | 65 | Reject name length |
+
+A `len(text) <= 64` check would accept the fourth Python string, but it does not satisfy the format's unit budget. Compute the encoded unit count when serializing, and validate the declared count before reading when decoding.
+
+Do not shorten an invalid input by dropping the last code unit and calling it the original observation. That can split a surrogate pair and, even when it does not, changes the input. A producer-side UI may deliberately create a shortened new label, but that is a separate transformation with its own rules.
+
+### Strict decoding cannot discover the intended byte order
+
+The little-endian compass bytes `3e d8 ed dd` form units `0xD83E` and `0xDDED`. Interpreting the same bytes as big-endian instead yields U+3ED8 and U+EDDD. Those units can decode without a surrogate error, but they do not represent the intended compass.
+
+This is a stronger counterexample than merely obtaining a decode exception. “The decoder accepted it” does not establish that you selected the correct encoding. The field's declared encoding and byte order must come from the supported schema or independent producer evidence.
+
+Likewise, try reading the embedded-NUL row as a C-style terminated string. It would appear to end after `A`, while the counted `OBS2` text includes `B`. Preserve the declared length convention through adapters and exports so that a valid observation is not silently shortened downstream.
+
 <a id="unicode-decisions"></a>
 ## Choose a text-decoding contract
 
@@ -178,6 +241,48 @@ The strings `\u00E9` and `e\u0301` can look alike while containing different cod
 
 For this book's comparison, labels are compared exactly after strict decoding. If you add a normalized search index, store it as a derived field. Preserve the original value and name the normalization form. Keep entity identity tied to the integer ID and session contract rather than to whichever display spelling happens to be convenient.
 
+<a id="streamed-text"></a>
+## Decode text across chunk boundaries
+
+A complete counted range is easiest to decode after all required bytes have been obtained. A larger source may instead supply contiguous chunks. The chunk boundary is an acquisition detail; it is not automatically a code-unit or character boundary.
+
+Split the compass's four bytes into `3e`, `d8 ed`, and `dd`. The first chunk contains half a UTF-16 unit. After the second, you have a complete high surrogate plus half the low surrogate. Only after the third chunk do you have the complete encoded code point.
+
+An incremental decoder can retain this incomplete state. The final lines from `python labs/collections_lab.py text` are:
+
+```text
+chunk=3e text=''
+chunk=d8ed text=''
+chunk=dd text='\U0001f9ed'
+final text=''
+```
+
+Empty text after a chunk means the decoder has not emitted a complete character yet. It does not mean the original label is empty, and it does not permit discarding the buffered bytes. At end of input, the finalization step must detect any incomplete remaining sequence. Python documents this stateful contract in its [incremental-decoder API](https://docs.python.org/3/library/codecs.html#incrementaldecoder-objects).
+
+### Finalization is a validation step
+
+If the stream ends after `3e d8`, a high surrogate remains without a low surrogate. If it ends after `3e`, even the first unit is incomplete. A strict finalization must fail in either case. Silently dropping buffered bytes would turn truncation into apparently successful text.
+
+Keep one decoder instance per continuous encoded text stream. Reusing its buffered state for another label can join unrelated bytes. Resetting it after every chunk loses valid cross-chunk sequences. Both mistakes come from treating transport chunks as if they were complete text fields.
+
+The `OBS2` parser does not need this streaming machinery: its label is bounded to 128 bytes, and it decodes a complete validated byte slice. The companion demonstration teaches the additional state needed if you later introduce streaming. Do not add buffering complexity to a small immutable input without a reason.
+
+### Missing bytes are not a chunk boundary
+
+Suppose the source provides the first byte and last two bytes but cannot supply the intervening byte. Appending the available pieces and passing them to a decoder would create a byte sequence that was never observed contiguously.
+
+Preserve the unavailable range and fail the complete-field read. An incremental decoder can bridge chunk boundaries only when the chunks are consecutive parts of the same encoded stream. It cannot reconstruct missing input or establish that two separate live reads came from one coherent publication.
+
+For a terminated UTF-16 string, also align the terminator search to units relative to the declared string start. A zero byte is not a two-byte terminator. At an odd file offset, valid two-byte units still start at that odd offset and every two bytes afterward; global even file addresses are not the alignment rule.
+
+### Keep raw, decoded, and searchable values separate
+
+A useful text result can retain the source byte range, encoding, declared units, strict decode status, original decoded text, and an optional derived search key. The search key should record the transformation that produced it.
+
+For example, NFC normalization can bring the two accent representations into a common canonical form. Compatibility normalization can make additional changes, such as converting the single ligature U+FB01 into `fi`. Choose a form according to the search requirement and preserve the original text. The [normalization specification](https://unicode.org/reports/tr15/) distinguishes those equivalences.
+
+Neither normalization nor a replacement-character preview repairs unavailable bytes. Neither should redefine numeric entity identity. When exporting to JSON, escaped Unicode can represent the same string; when displaying in a terminal, escaped controls can preserve otherwise invisible distinctions. Record transformations without confusing presentation with a new source observation.
+
 <a id="range-proof"></a>
 ## Prove a variable-length range fits
 
@@ -196,6 +301,52 @@ Python's arbitrary-size integers avoid that particular wraparound, but they do n
 Consider a 96-byte image and an array offset of 48. There are 48 bytes left. With a stride of 16, at most three complete elements fit. A declared count of four is invalid even though the first three records can be decoded. Returning those three as a complete four-element observation would hide missing evidence.
 
 Zero-length ranges deserve an explicit rule. `OBS2` still requires their offsets to lie between the end of the header and the end of the image. Thus a zero-count array at offset 96 is valid, while a zero-count array at offset `0xFFFFFFFF` is invalid. Another format could choose a different empty-pointer convention; the lesson is to specify it rather than rely on incidental slicing behavior.
+
+<a id="range-casebook"></a>
+## Resolve boundary and overlap cases
+
+Practice range checks independently of text decoding. For a 96-byte image, a 32-byte header, and a sixteen-byte entity stride, the following array requests illustrate the format's policy. Assume the other fields satisfy their own rules.
+
+| Array offset | Count | Requested interval | Range result |
+| ---: | ---: | --- | --- |
+| 32 | 0 | `[32, 32)` | Valid empty range |
+| 96 | 0 | `[96, 96)` | Valid empty range at image end |
+| 97 | 0 | Outside image | Reject the offset |
+| 31 | 0 | Inside fixed header | Reject the offset |
+| 48 | 3 | `[48, 96)` | Valid exact fit |
+| 49 | 3 | `[49, 97)` | Reject one missing byte |
+| 48 | 4 | `[48, 112)` | Reject incomplete array |
+| `0xFFFFFFFF` | 0 | Outside image | Reject despite zero count |
+
+Notice that offset 49 fails here because the range extends past byte 96, not because 49 is odd. This packed file format has no alignment requirement for payload starts. With enough bytes and nonoverlapping ranges, an odd start is valid.
+
+### Use the actual overlap predicate
+
+For two nonempty half-open intervals `[a, a+n)` and `[b, b+m)`, overlap exists when:
+
+```text
+max(a, b) < min(a + n, b + m)
+```
+
+Adjacent intervals have equal endpoints at the meeting point, so the strict inequality is false. The `OBS2` decoder first establishes bounded extents and applies this relationship only when both lengths are nonzero.
+
+For a name in `[32, 48)`, an array beginning at 48 is adjacent and valid. An array beginning at 47 overlaps one byte. An empty name positioned at 48 consumes no bytes and does not overlap an array starting there, although its offset must still satisfy the payload-offset rule.
+
+This overlap restriction belongs to `OBS2`. A different object model can deliberately alias buffers or refer to shared strings. Reusing this predicate as a universal “memory validity” rule would reject legitimate shared storage. First state which regions must be disjoint under the actual schema.
+
+### Bound before multiplying
+
+For a fixed-width implementation, consider a malicious count of `0x10000000` and stride 16. Their mathematical product is `0x100000000`, one beyond the largest `uint32`. Unchecked 32-bit multiplication can wrap it to zero and make an incomplete array look like a harmless empty request.
+
+The teaching decoder rejects counts above 64 before multiplying. That limits entity payloads to `64 * 16 = 1,024` bytes. The name cap similarly limits text to 128 bytes. Their maximum active payload plus the 32-byte header is 1,184 bytes, while the separate 4,096-byte image cap also permits unused gaps and trailing bytes.
+
+Those limits answer different questions. The image cap bounds supplied input; field limits bound supported work and representation; range checks prove the requested data is actually present. None should silently replace the others when porting the parser.
+
+### Respect validation order
+
+The decoder validates overall image length, header identity/version/size, count and name-unit budgets, payload extents, overlap, strict text, and entity fields. An input with count 65 and a malformed name will fail the count limit before reaching text decoding.
+
+Use one primary defect per diagnostic exercise when you want to establish a particular check. Multiple faults are useful for robustness tests, but the first reported error does not prove that later validators ran. A clear failure matrix records the intended failing invariant rather than merely asserting that some exception occurred.
 
 <a id="collection-layouts"></a>
 ## Handle arrays, lists, and linked structures
@@ -224,6 +375,132 @@ An index-based structure replaces pointer validation with index validation. If a
 
 For nested structures, track a total work budget as well as a per-list limit. Sixty-four parents each containing sixty-four children already produce 4,096 child visits. Add strings, retries, and repeated shared objects, and a seemingly small local limit can still produce a large operation.
 
+<a id="storage-layouts"></a>
+## Decode alternative valid storage layouts
+
+A decoder should follow the format, not the fixture generator's favorite ordering. The normal encoder writes the name before the entity array. The `OBS2` schema permits another ordering as long as the header points to complete, nonoverlapping payloads.
+
+The companion constructs four representations of the same tracked state:
+
+```sh
+python labs/collections_lab.py layouts
+```
+
+```text
+baseline bytes=96 name=32 array=48 equal=true
+array-first bytes=96 name=80 array=32 equal=true
+unaligned bytes=97 name=33 array=49 equal=true
+reordered bytes=112 name=48 array=64 equal=true
+```
+
+Here, `equal=true` means equality under the lab's semantic view: exact decoded label and entity values matched in ID order. It does not mean identical file bytes, identical array storage order, or equality of properties outside the schema.
+
+### Array before name
+
+The array-first case stores its three records in `[32, 80)` and its sixteen-byte label in `[80, 96)`. The first record begins immediately after the header. The header says name offset 80 and array offset 32.
+
+Nothing in the format requires `name_offset < array_offset`. An implementation that always treats the name's end as the array start would fail this valid layout. Follow each declared range independently, then enforce their actual relationship.
+
+The third record's health starts at `32 + 2 * 16 + 4 = 68`, or `0x44`. This differs from the baseline third health offset `0x54`. The same field calculation works because it uses the declared array start and stride rather than a remembered absolute offset.
+
+### Unaligned payloads
+
+One padding byte moves the name to offset 33 and the array to offset 49. The name occupies `[33, 49)` and the array `[49, 97)`. Both ranges fit, are adjacent, and decode to the same values.
+
+The file format permits this. A native structure access strategy might impose stronger alignment requirements, but those are implementation concerns to solve without inventing a new file-format restriction. Read bytes and decode the explicitly specified fields rather than assuming that a cast to a host-language object is valid.
+
+This example also clarifies UTF-16 alignment: the first unit begins at offset 33, the next at 35, and so on. Each unit still contains two bytes. “Aligned to a code-unit boundary” means relative to this payload's start, not necessarily an even absolute file offset.
+
+### Three collection representations that need different reads
+
+Do not generalize the inline `OBS2` array into every native collection. Consider three separate hypothetical schemas for three entities:
+
+| Representation | Initial storage | Additional interpretation |
+| --- | --- | --- |
+| Inline sixteen-byte records | 48 bytes contain all three records | Decode fields at each sixteen-byte stride |
+| Array of three eight-byte pointers | 24 bytes contain three target addresses | Validate and read each referenced record under its own lifetime |
+| Separate arrays for IDs and fields | Each array has its own address and field stride | Establish their count, correspondence, and shared snapshot contract |
+
+In the pointer-array case, reading 24 bytes does not obtain the records themselves. In the separate-array case, a valid health array is insufficient if the corresponding ID array came from another generation. The logical phrase “three entities” does not specify physical representation or consistency.
+
+Likewise, a source-language string can use inline small-string storage, a pointer/length pair, or a managed object whose fields depend on runtime and build. Establish that representation from the supported ABI, symbols, or controlled producer evidence. There is no universal “string offset” derivable merely from the language name.
+
+<a id="bounded-traversal"></a>
+## Walk an index chain with explicit limits
+
+A packed array has direct element arithmetic. A linked structure adds a dependency at every node: the next location comes from the current node. To make that behavior executable without inventing live-pointer guarantees, the companion includes a separate immutable index-table exercise.
+
+The table stores one next index per slot. Valid indices are `0` through `len(table) - 1`. The value `-1` is the only end marker. Cycles are forbidden in this exercise, the table is limited to 1,024 entries, and the caller supplies a visit budget from 0 through 1,024. This is not an additional `OBS2` payload layout.
+
+For the table `(1, 2, -1)` and start index 0:
+
+| Step | Current index | Recorded visit | Next index |
+| ---: | ---: | --- | ---: |
+| 1 | 0 | `[0]` | 1 |
+| 2 | 1 | `[0, 1]` | 2 |
+| 3 | 2 | `[0, 1, 2]` | -1 |
+| Stop | -1 | Return the complete order | No further read |
+
+A budget of 3 permits this chain. A budget of 2 must report exhaustion before visiting index 2; it must not return `[0, 1]` labeled as the complete chain. An empty table with start `-1` and budget 0 is valid because no node is requested.
+
+### Validate before indexing
+
+The traversal checks the current value's integer type, handles the documented sentinel, verifies its range, checks for a repeated index, and checks the visit budget before accessing the table entry. The order makes each next-index read conditional on valid context.
+
+This matters in languages where a negative index can have another meaning. Python's `table[-1]` selects the last element; the exercise's sentinel must therefore be recognized before indexing. Other negative values are invalid, not alternate ways to address the table. Booleans are also rejected as indices despite Python's integer relationship.
+
+For table `(3, -1)` starting at 0, the first node leads to index 3, which is outside the two-entry table. The failure is an invalid link. Reading whatever happens to lie after the table would not be a valid traversal strategy.
+
+For table `(1, 0)`, the path is `0 -> 1 -> 0`. Encountering 0 a second time identifies a cycle in this single chain. A larger node budget does not make that cycle valid; the structure's termination contract forbids it.
+
+### Run success and failure paths
+
+```sh
+python labs/collections_lab.py traversal
+```
+
+```text
+PASS chain order=[0, 1, 2]
+PASS empty order=[]
+PASS cycle cycle at index 0
+PASS invalid-link index out of range: 3
+PASS budget visit budget exhausted
+checks=5 passed=5 failed=0
+```
+
+Each failed traversal is a successful demonstration when its diagnostic matches the expected rule. The demonstration returns status 0 when all five expectations hold. The reusable `walk_chain` function raises `TraversalError` for a rejected input and never returns a partial order as a complete result.
+
+### Do not confuse shared nodes with cycles in other structures
+
+The visited-set rule above applies to one chain. A graph can legitimately let two parents reference the same child without containing a cycle. A graph traversal must distinguish a node already processed through another branch from a node encountered again on the active path, according to the graph's declared rules.
+
+Similarly, a circular list may intentionally terminate when traversal returns to its sentinel. Rejecting every repeated address would be wrong for that structure. Document the sentinel, allowed sharing, cycle policy, and output multiplicity before choosing the algorithm.
+
+For live pointers, add address-space validation and object lifetime to these index checks. The same address can be reused for a different allocation. A set of previously seen integers alone cannot establish that the objects remained stable during a live walk.
+
+<a id="nested-budgets"></a>
+## Budget nested collections
+
+A limit on each individual collection does not necessarily bound a whole operation to a useful size. Imagine a different schema containing 64 parents, each with 64 children. That permits 4,096 child visits. If every child has a 64-unit UTF-16 label, the label payload alone can occupy `4,096 * 128 = 524,288` bytes, or 512 KiB.
+
+If each child also has a sixteen-byte record, those records add 65,536 bytes, or 64 KiB. This is already 576 KiB before parent metadata, lookup tables, unavailable reads, or retry overhead. This calculation describes a hypothetical nested format; one `OBS2` image does not encode that hierarchy.
+
+Define budgets at the operation level as well as the field level:
+
+| Budget | What it limits | Why a local count is insufficient |
+| --- | --- | --- |
+| Total node visits | Traversal work across the hierarchy | Many individually small lists can accumulate |
+| Total requested bytes | Acquisition and retained payload volume | Strings and indirect buffers vary in size |
+| Nesting depth | Recursive descent and stack growth | A chain can be deep without having broad child lists |
+| Request count | Source operations, including failed attempts | Tiny or repeatedly unavailable reads can dominate |
+| Retry count or elapsed budget | Repeated attempts to obtain consistency | A changing producer can prevent completion indefinitely |
+
+Charge work according to the contract. If the byte budget measures requested bytes, a failed source request still consumed that request allowance. If the node budget measures visits rather than unique objects, revisiting a shared node consumes work even when its identity was previously seen.
+
+Caching can reduce repeated reads, but it needs a lifetime and version key. A cached string from the same immutable image can be reused under that image's identity. Reusing it across live collection replacements without source evidence can return old display text with a new entity record.
+
+When a budget is exhausted, report the unfinished scope. A complete-snapshot consumer should reject that incomplete observation. An exploratory interface may show a bounded prefix if it labels the prefix and never treats unseen children as absent. The output's completeness status must survive beyond the traversal function.
+
 <a id="live-collections"></a>
 ## Separate live lifetime from stored layout
 
@@ -238,6 +515,43 @@ If you do not have such a protocol, describe your observations as best effort an
 For a bounded retry strategy, record how many attempts were made and why each was rejected. An eventual success supports the accepted attempt; it does not erase the fact that earlier attempts were inconsistent. Returning a mixture of fields from different attempts is especially misleading. Treat the accepted observation as one unit.
 
 The current `OBS2` decoder has no live producer, pointer-retention protocol, or thread synchronization implementation. Its generation field identifies a stored observation for comparison and replay. Keeping that boundary explicit prevents a useful file parser from being mistaken for a verified concurrent-memory reader.
+
+<a id="replacement-timeline"></a>
+## Review a collection replacement timeline
+
+Consider a hypothetical native collection header with a buffer pointer, logical count, capacity, and publication generation. These are illustrative fields, not offsets copied from a particular runtime. Each element occupies sixteen bytes.
+
+At first, the header describes pointer `0x2000`, count 3, capacity 8, and generation 10. The active records occupy `[0x2000, 0x2030)`, while the allocation reserves `[0x2000, 0x2080)`. Five capacity slots do not belong to the current logical collection.
+
+The producer grows the collection to count 9, allocates capacity 16 at `0x3000`, publishes generation 12, and eventually releases the old allocation. The new active range is `[0x3000, 0x3090)`; reserved storage ends at `0x3100`.
+
+### Identify a mixed observation
+
+| Time | Producer action | Reader action | Consequence |
+| --- | --- | --- | --- |
+| t0 | Old header is current | Reads pointer `0x2000` | Has part of generation-10 context |
+| t1 | Installs the new header | Reads count 9 | Combines a new count with an old pointer |
+| t2 | Old storage may be released | Requests 144 bytes from `0x2000` | Request does not describe either published collection |
+
+The old allocation reserved only 128 bytes. A mixed count of 9 asks for 144, exceeding it by sixteen. A source might report unavailability, or the following address range might happen to be readable. Successful acquisition in the latter case still would not establish a valid nine-element collection.
+
+Even copying the old pointer and old count together is not enough if the old allocation can disappear before its payload is copied. Bounds establish arithmetic consistency; a retention protocol establishes whether those bytes still belong to the intended object.
+
+### Define what an acceptance protocol must establish
+
+For a producer you control, one option is to publish immutable buffers and retain them until the supported reader protocol permits release. Another design may use generations and retries together with the required memory-ordering and lifetime rules. The specific protocol must cover both the header and referenced data.
+
+A useful review asks when publication becomes visible, what metadata identifies it, how a reader detects replacement, and when old storage may be freed. It also asks what the acquisition route guarantees about freshness and ordering. A counter copied from a cache cannot automatically prove that the referenced payload belongs to that same publication.
+
+The synthetic `OBS2` image avoids these live races by supplying immutable bytes. Its generation field supports the comparison and replay exercises, but it is not itself an implementation of buffer retention. Preserve that distinction when reusing the file decoder in a live application.
+
+### Keep one candidate per attempt
+
+When an attempt fails consistency validation, discard that candidate as a complete observation. Do not retain its name, fetch the array again under a later generation, and combine them without an explicit cross-generation rule.
+
+For example, attempt one might observe label `old` and then fail the array read. Attempt two might observe label `new` with a valid array. The accepted snapshot should come from the supported coherent attempt, not from a mixture chosen because each individual field looked valid.
+
+Record the number and reason of rejected attempts. If the retry budget ends, report that no complete observation was established. A last-known valid snapshot can remain available to a user interface, but its identity and age should remain attached to it. [Chapter 18](18-polling-and-replay.md#state-walkthrough) shows that separation in deterministic replay.
 
 <a id="diagnostic-lab"></a>
 ## Diagnose three malformed observations
@@ -260,6 +574,41 @@ The header still declares three entities, but the file is truncated from 96 byte
 
 If a separate exploratory viewer chooses to show the first two records, label that view incomplete and keep it out of the complete-snapshot comparison path. The missing byte is evidence about availability, not a license to redefine the schema.
 
+<a id="decoder-casebook"></a>
+## Run the complete decoder casebook
+
+The companion packages the chapter's valid alternatives and malformed examples into a reproducible acceptance matrix:
+
+```sh
+python labs/collections_lab.py cases
+```
+
+Expected final line:
+
+```text
+checks=25 passed=25 failed=0
+```
+
+Each row shows whether the input was accepted or rejected and the actual result or diagnostic. The matrix contains empty inputs, empty-offset violations, exact and incomplete ranges, alternate layouts, overlaps, excessive counts, malformed surrogate sequences, partial units, duplicate or zero IDs, non-finite fields, mixed-text limits, embedded NUL, and a leading U+FEFF.
+
+An expected rejection counts as a passed check. An unexpected acceptance or incorrect diagnostic makes the demonstration return status 1. This is a demonstration command that evaluates expectations; direct inspection of a malformed file still returns failure as described in the [advanced lab](../labs/advanced.md).
+
+### Diagnose malformed Unicode at the right layer
+
+The isolated high-surrogate case contains complete bytes `00 d8` for one unit. The range is available, but that unit cannot complete a well-formed UTF-16 string by itself. The isolated low-surrogate case uses `00 dc` and fails for the corresponding structural reason.
+
+The high-surrogate-followed-by-ASCII case contains `00 d8 41 00`. Both units are available, but the second is not a low surrogate. The reversed compass pair `ed dd 3e d8` also fails. These are text errors after successful byte-range validation.
+
+By contrast, the partial-unit case declares one unit but supplies only byte `3e`. The parser rejects the required two-byte range before attempting text decoding. Keep this distinction in a diagnostic report: unavailable encoded data and available malformed text require different investigations.
+
+### Validate the collection after validating the text
+
+A valid label does not make entity records valid. The duplicate-ID case overwrites the second entity's ID at offset 64 with 10, duplicating the first record. The zero-ID case overwrites the first ID with zero. Both violate the identity rule before any comparison map should be constructed.
+
+The non-finite cases use literal binary32 encodings for NaN in health and positive infinity in x. The schema rejects both. Health also has a separate 0–100 bound, while coordinates have no additional range restriction in this invented format. Do not infer a universal coordinate range from the sample values.
+
+Retain the original input and expected rule if a case behaves unexpectedly. Identify whether a change affected construction, range validation, text interpretation, entity validation, or presentation. The broader testing methodology is developed in [Chapter 19](19-testing-layouts.md#failure-triage).
+
 ## A decoder review you can perform on paper
 
 Trace each untrusted header field to the operation it controls. The name-unit count controls a multiplication and a decode length. The entity count controls a multiplication and loop bound. The two offsets control slices. The generation controls later ordering but not range validity. The version determines whether any of those interpretations are supported.
@@ -275,6 +624,14 @@ Finally, inspect the output boundary. The lab stores decoded text as Unicode, es
 2. **Choose the correct empty case.** A 32-byte image contains an empty name and zero entities. Both payload offsets are 32. Does the layout satisfy the range rules? What changes if the array offset is zero?
 3. **Separate identity from presentation.** Two entity records have different IDs but the same display name. A search index normalizes both names to the same text. Should the comparison merge the entities?
 4. **Explain a successful bad read.** Why can a string read from an array's bytes pass the text decoder while still being an invalid `OBS2` observation?
+5. **Check a mixed label.** Compare 62 copies of `A` plus one compass with 63 copies of `A` plus one compass. Give the code-point, UTF-16-unit, and byte counts, then apply the name limit.
+6. **Finish a stream.** A strict incremental decoder receives `3e d8` and then reaches end of input. Should it return an empty successful label, a compass, or a failure? What if the missing low-surrogate bytes arrive before finalization?
+7. **Follow a different layout.** The three entity records occupy `[32, 80)` and the name occupies `[80, 96)`. Where is the third entity's health? Does the name's position make the layout invalid?
+8. **Explain an odd offset.** The name starts at 33, occupies sixteen bytes, and the three-record array starts at 49 in a 97-byte image. Are the payload ranges valid, and where do UTF-16 units begin?
+9. **Stop a chain.** For links `(1, 2, -1)` starting at 0, compare visit budgets 2 and 3. Explain why returning a two-node prefix as complete would be wrong.
+10. **Separate sharing from a cycle.** Two parents in a graph reference the same child. Why is “already visited” not sufficient to declare a cycle under every graph schema?
+11. **Budget the hierarchy.** In the hypothetical 64-by-64 hierarchy, calculate maximum child-label bytes when each label uses 64 UTF-16 units. What work remains outside that figure?
+12. **Reject mixed metadata.** The old allocation at `0x2000` has capacity 8 and stride 16, but a mixed read uses the new count 9. Calculate the requested and reserved byte counts and explain why a successful byte read would not establish a valid collection.
 
 [Worked solutions](../appendices/deep-dive-answers.md#chapter-15).
 

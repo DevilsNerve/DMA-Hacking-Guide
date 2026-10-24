@@ -120,6 +120,28 @@ The command-line contract is success status 0, operational/input failure status 
 
 The fixed-seed mutation cases are bounded experiments. Passing them is evidence about those cases, not an exhaustive proof of parser correctness or a performance benchmark.
 
+<a id="strings-and-collections"></a>
+## Chapter 15 strings and collections casebook
+
+The [collections companion](collections_lab.py) reproduces the detailed text and collection examples without modifying fixture files:
+
+```sh
+python labs/collections_lab.py text
+python labs/collections_lab.py cases
+python labs/collections_lab.py layouts
+python labs/collections_lab.py traversal
+```
+
+`text` compares six exact strings, printing code-point count, UTF-16-unit count, UTF-8 and UTF-16 byte lengths, and raw little-endian bytes. It then splits the compass into three contiguous chunks to demonstrate strict incremental decoding. It preserves embedded NUL and a leading U+FEFF as counted text.
+
+`cases` checks 25 valid and invalid `OBS2` inputs, including complete and incomplete ranges, overlapping payloads, surrogate errors, text-length boundaries, duplicate IDs, and non-finite fields. Its expected final line is `checks=25 passed=25 failed=0`. A controlled rejection passes the demonstration when it matches the expected invariant; any unmet expectation makes the command return status 1.
+
+`layouts` decodes four storage arrangements and compares their label and entity values under the existing semantic view. The valid cases include array-before-name ordering and unaligned payload starts. See the [chapter's complete expected output](../chapters/15-strings-and-collections.md#storage-layouts).
+
+`traversal` checks a separate immutable index-table model with one next index per node, -1 as the only end marker, no cycles, and explicit table/visit limits. It does not add linked nodes to `OBS2` or read live pointers. Its five cases cover a complete chain, an empty chain, a cycle, an invalid link, and budget exhaustion. Expected final line: `checks=5 passed=5 failed=0`.
+
+The [companion tests](../tests/test_collections_lab.py) verify literal text encodings, split-code-point finalization, alternative layouts, traversal failures, and the documented command output. Chapter 15's [twelve worked solutions](../appendices/deep-dive-answers.md#chapter-15) explain the corresponding calculations and limits.
+
 <a id="detailed-walkthroughs"></a>
 ## Reproduce the detailed chapter calculations
 
@@ -169,7 +191,7 @@ at_ms status accepted_generation last_observation_ms last_progress_ms
 
 `evidence` prints a JSON reference report containing fixture hashes, sizes, generations, storage IDs, comparison lines, and replay states with input hashes. It regenerates reference fixtures in memory; it does not read or verify earlier files on disk. No command writes an evidence file automatically or accesses a process or device. Retain actual file-creation and inspection outputs separately when completing the investigation.
 
-The [focused tests](../tests/test_deep_dive.py) cover mapping boundaries, ambiguous metadata, truncated backing, width limits, replay state, and the reference artifact hashes. The [worked answers](../appendices/deep-dive-answers.md) explain all 24 chapter exercises.
+The [focused tests](../tests/test_deep_dive.py) cover mapping boundaries, ambiguous metadata, truncated backing, width limits, replay state, and the reference artifact hashes. The [worked answers](../appendices/deep-dive-answers.md) explain all 32 exercises across Chapters 15–20.
 
 ## Complete the investigation
 

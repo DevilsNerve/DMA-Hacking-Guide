@@ -71,7 +71,7 @@ Use [Unity layouts](chapters/10-unity.md), [translation](chapters/11-address-tra
 
 Chapters [15](chapters/15-strings-and-collections.md) through [20](chapters/20-complete-investigation.md) take you from one record to a small investigation: decode a named collection, distinguish module and file locations, compare captures by identity, replay failures, and test the assumptions behind your conclusion. Follow the [advanced lab](labs/advanced.md) alongside these chapters. It uses ordinary Python and synthetic observations, so you can reproduce the results without a device.
 
-Each of these chapters includes a local contents list, detailed calculations, failure analysis, and four additional exercises with [worked solutions](appendices/deep-dive-answers.md). The [calculation tools](labs/advanced.md#detailed-walkthroughs) reproduce section mapping, numeric precision, replay state, and the final evidence report.
+Each of these chapters includes a local contents list, detailed calculations, failure analysis, and exercises with [worked solutions](appendices/deep-dive-answers.md). Chapter 15 includes twelve exercises and a [strings and collections casebook](labs/advanced.md#strings-and-collections); Chapters 16–20 each add four. The [calculation tools](labs/advanced.md#detailed-walkthroughs) reproduce section mapping, numeric precision, replay state, and the final evidence report.
 
 <a id="topic-finder"></a>
 ## Find a specific answer

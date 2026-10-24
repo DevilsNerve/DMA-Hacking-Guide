@@ -38,6 +38,54 @@ Many arbitrary pairs of bytes form valid UTF-16 units. Therefore bytes borrowed 
 
 An `OBS2` observation must also have valid header fields, complete payload ranges, separate nonempty payloads, unique IDs, and valid numbers. A nonempty name overlapping the entity array violates the format independently of what the name bytes happen to decode into. Check structure before interpreting content.
 
+### 5. Check a mixed label
+
+Sixty-two copies of `A` plus one compass contain 63 code points, 64 UTF-16 units, and 128 UTF-16 bytes. The compass contributes one code point but two units. The label satisfies the 64-unit limit.
+
+Sixty-three copies of `A` plus one compass contain 64 code points, 65 UTF-16 units, and 130 UTF-16 bytes. The label must be rejected despite having only 64 code points. A Python string-length check alone would enforce the wrong unit.
+
+### 6. Finish a stream
+
+The bytes `3e d8` form the high surrogate U+D83E. Before finalization, the decoder may buffer it and emit no text. At finalization, a strict decoder must reject the missing low surrogate rather than return a successful empty label.
+
+If the contiguous bytes `ed dd` arrive before finalization, the complete pair decodes to the compass U+1F9ED. Buffering is justified by continuity of the encoded stream; it cannot repair an unavailable byte or join unrelated text fields.
+
+### 7. Follow a different layout
+
+The third entity starts at `32 + 2 * 16 = 64`. Its health begins four bytes later, at 68 or `0x44`, occupying `[68, 72)`. This field lies entirely within the declared array.
+
+The name's later position is valid. The array ends at 80, exactly where the name starts, so the nonempty ranges are adjacent and do not overlap. `OBS2` does not require name-before-array ordering.
+
+### 8. Explain an odd offset
+
+The name occupies `[33, 49)` and the array `[49, 97)`. Both lie after the header, fit the 97-byte image, and are adjacent. The format does not impose an even or sixteen-byte-aligned payload start.
+
+UTF-16 units begin at offsets 33, 35, 37, 39, 41, 43, 45, and 47. Each contains two bytes. Code-unit boundaries are relative to the string's declared start; imposing global even file offsets would reject this valid packed representation.
+
+### 9. Stop a chain
+
+A budget of 3 permits visits 0, 1, and 2, after which the next index is the end marker -1. The complete result is `[0, 1, 2]`.
+
+A budget of 2 is exhausted before visiting node 2. The traversal must report that failure. Returning `[0, 1]` as a complete result would hide a known remaining dependency. A separate exploratory interface could display that prefix only with explicit incompleteness.
+
+### 10. Separate sharing from a cycle
+
+Two different paths can reach the same child in a graph that permits sharing without any path returning to an ancestor. A globally visited node can therefore mean “already processed through another branch,” not necessarily “cycle.”
+
+Choose the algorithm according to the schema. A directed acyclic-graph traversal may distinguish active-path membership from completed nodes. The chapter's simpler chain has only one next edge per visited node, so encountering a previously visited index on that same chain identifies a cycle under its no-cycle contract.
+
+### 11. Budget the hierarchy
+
+There are `64 * 64 = 4,096` possible children. Each 64-unit UTF-16 label occupies 128 bytes, so the label bytes total `4,096 * 128 = 524,288`, or 512 KiB.
+
+That excludes the child records, parent metadata, indices or pointers, request overhead, retries, and any derived output. Sixteen-byte child records alone add 65,536 bytes, or 64 KiB. Separate node, byte, depth, and request budgets capture costs that a per-label limit does not bound by itself.
+
+### 12. Reject mixed metadata
+
+The old capacity reserves `8 * 16 = 128` bytes. The new count asks for `9 * 16 = 144` bytes, sixteen beyond that allocation's extent. The mixed pointer/count pair describes neither complete published collection.
+
+An adjacent readable range could let the byte request succeed, but readable bytes do not establish ownership, entity count, or a coherent publication. Even an old pointer paired with its old count still needs a lifetime guarantee if the old allocation can be released before the payload read.
+
 [Return to Chapter 15](../chapters/15-strings-and-collections.md#chapter-exercises).
 
 <a id="chapter-16"></a>
