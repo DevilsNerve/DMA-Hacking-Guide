@@ -102,4 +102,46 @@ You need a real supported device and platform configuration, successful source i
 
 [Return to Chapter 14](../chapters/14-capstone.md#checkpoint)
 
+<a id="chapter-15"></a>
+## Chapter 15 answer
+
+The unit is missing. If the schema means eight UTF-16 code units, request sixteen bytes. Those units might encode fewer than eight code points because a supplementary character uses a surrogate pair. Displayed characters can also combine several code points. Decode using the declared encoding and retain the schema's length unit.
+
+[Return to Chapter 15](../chapters/15-strings-and-collections.md#checkpoint)
+
+<a id="chapter-16"></a>
+## Chapter 16 answer
+
+The RVA lies within the invented section's virtual region, but its displacement `0x450` exceeds the section's `0x400` raw file size. There is no stored byte for that position under this mapping. Computing `0x400 + 0x450` ignores raw availability and could select unrelated bytes elsewhere in the file.
+
+[Return to Chapter 16](../chapters/16-modules-and-symbols.md#checkpoint)
+
+<a id="chapter-17"></a>
+## Chapter 17 answer
+
+Payload relocation or array reordering can alter many bytes while preserving the ID-based state. Changes to ignored padding can do the same. Compare header offsets, ranges, ordering, and the independently decoded records. Also check the comparison's declared field scope: unchanged tracked fields do not imply every unobserved application property stayed unchanged.
+
+[Return to Chapter 17](../chapters/17-comparing-captures.md#checkpoint)
+
+<a id="chapter-18"></a>
+## Chapter 18 answer
+
+A duplicate supplies no evidence of a higher generation, so refreshing the progress timestamp would hide a stream that never advances. An unchanged application may legitimately publish no new state. The progress budget is a consumer policy; interpreting it as a fault requires a producer contract about expected advancement or heartbeats.
+
+[Return to Chapter 18](../chapters/18-polling-and-replay.md#checkpoint)
+
+<a id="chapter-19"></a>
+## Chapter 19 answer
+
+The mutation may affect ignored padding or create a different valid field value. Establish that the changed input violates a documented invariant and that the parser nevertheless accepts it, or show an uncontrolled failure such as an unexpected exception. Keep the smallest reproducing input and its independently expected outcome.
+
+[Return to Chapter 19](../chapters/19-testing-layouts.md#checkpoint)
+
+<a id="chapter-20"></a>
+## Chapter 20 answer
+
+Byte equality or hashes establish whether complete stored byte sequences match. The relocation result and named entity changes require successful decoding, a comparison policy, stable identity, and complete observations. Statements about last accepted progress and handling regressions require the ordered replay history and the monitor's state rules. None of these synthetic results establishes live hardware behavior.
+
+[Return to Chapter 20](../chapters/20-complete-investigation.md#checkpoint)
+
 [Back to contents](../README.MD#table-of-contents)

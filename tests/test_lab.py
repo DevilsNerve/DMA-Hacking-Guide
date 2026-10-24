@@ -150,8 +150,8 @@ class CliTests(unittest.TestCase):
                     "health=87.5 items=[10, 20, 30]\n"
                     "signature_matches=['0x140000100']\n")
         self.assertEqual(result.stdout, expected)
-        self.assertIn(expected.strip(), (ROOT / "labs/README.md").read_text())
-        self.assertIn(expected.strip(), (ROOT / "chapters/03-tools-and-lab.md").read_text())
+        self.assertIn(expected.strip(), (ROOT / "labs/README.md").read_text(encoding="utf-8"))
+        self.assertIn(expected.strip(), (ROOT / "chapters/03-tools-and-lab.md").read_text(encoding="utf-8"))
 
     def test_create_inspect_scan_and_overwrite_policy(self):
         with tempfile.TemporaryDirectory() as directory:

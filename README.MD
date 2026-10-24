@@ -31,12 +31,19 @@ The examples use synthetic data and programs you control. The practical goal is 
 | [12. Performance and freshness](chapters/12-performance.md) | Batching, caches, latency distributions, and useful throughput. |
 | [13. Reproducibility and tool design](chapters/13-reproducibility.md) | Versioned layouts, evidence records, and dependable exports. |
 | [14. Build a trustworthy reader](chapters/14-capstone.md) | An end-to-end project with measurable acceptance criteria. |
+| [15. Strings and collections](chapters/15-strings-and-collections.md) | Decode text and variable-length records with explicit units and bounds. |
+| [16. Modules, symbols, and build identity](chapters/16-modules-and-symbols.md) | Relate loaded addresses, file bytes, symbols, and exact builds. |
+| [17. Comparing captures](chapters/17-comparing-captures.md) | Separate layout changes from meaningful changes in application state. |
+| [18. Polling and replay](chapters/18-polling-and-replay.md) | Handle duplicates, failures, generation changes, and observation age. |
+| [19. Testing unfamiliar layouts](chapters/19-testing-layouts.md) | Challenge a decoder with boundaries, mutations, and independent evidence. |
+| [20. A complete investigation](chapters/20-complete-investigation.md) | Turn several captures and a replay trace into a defensible conclusion. |
 
 <!-- BOOK:CONTENTS:END -->
 
 ### Appendices and practical material
 
 - [Runnable labs and expected output](labs/README.md)
+- [Advanced lab for Chapters 15–20](labs/advanced.md)
 - [Glossary](appendices/glossary.md)
 - [Checkpoint answers](appendices/answers.md)
 - [Sources and further reading](appendices/resources.md)
@@ -59,6 +66,10 @@ Read [acquisition](chapters/05-acquisition.md), [reliable reads](chapters/06-rea
 
 Use [Unity layouts](chapters/10-unity.md), [translation](chapters/11-address-translation.md), [performance](chapters/12-performance.md), and [reproducibility](chapters/13-reproducibility.md) as reference chapters. The [capstone](chapters/14-capstone.md) gives you acceptance criteria for a reader that survives malformed data and changing layouts.
 
+### Continue beyond the first capstone
+
+Chapters [15](chapters/15-strings-and-collections.md) through [20](chapters/20-complete-investigation.md) take you from one record to a small investigation: decode a named collection, distinguish module and file locations, compare captures by identity, replay failures, and test the assumptions behind your conclusion. Follow the [advanced lab](labs/advanced.md) alongside these chapters. It uses ordinary Python and synthetic observations, so you can reproduce the results without a device.
+
 <a id="topic-finder"></a>
 ## Find a specific answer
 
@@ -74,6 +85,12 @@ Use [Unity layouts](chapters/10-unity.md), [translation](chapters/11-address-tra
 | “Does IL2CPP preserve C# object layouts?” | [Unity's managed and native sides](chapters/10-unity.md#layouts) |
 | “Why doesn't DMA imply unrestricted access?” | [IOMMU and platform protections](chapters/08-protections-and-observability.md#iommu) |
 | “How do I measure improvements?” | [Benchmark design](chapters/12-performance.md#measurement) |
+| “Does a string length count bytes or characters?” | [Text length units](chapters/15-strings-and-collections.md#text-units) |
+| “How do I find an RVA in a file?” | [Section mapping example](chapters/16-modules-and-symbols.md#section-example) |
+| “Did the data change, or just its position?” | [Semantic comparison](chapters/17-comparing-captures.md#semantic-comparison) |
+| “What should a reader do when a sample fails?” | [Replay state transitions](chapters/18-polling-and-replay.md#state-transitions) |
+| “How do I challenge my decoder?” | [Mutation experiments](chapters/19-testing-layouts.md#mutations) |
+| “What does a finished investigation look like?” | [Worked investigation](chapters/20-complete-investigation.md#investigation) |
 
 ## Run the book's examples
 
@@ -81,6 +98,7 @@ Install Python 3.10 or newer. From the repository root:
 
 ```sh
 python labs/memory_lab.py demo
+python labs/advanced_lab.py demo
 python -m unittest discover -s tests -v
 python tools/book.py check
 ```

@@ -2,7 +2,7 @@
 
 <!-- BOOK:NAV:START -->
 
-[Previous: Reproducibility and tool design](13-reproducibility.md) · [Contents](../README.MD#table-of-contents) · [Practice labs](../labs/README.md)
+[Previous: Reproducibility and tool design](13-reproducibility.md) · [Contents](../README.MD#table-of-contents) · [Next: Strings and collections](15-strings-and-collections.md)
 
 <!-- BOOK:NAV:END -->
 
@@ -78,6 +78,10 @@ Use [Chapter 12](12-performance.md) to compare individual reads with a supported
 
 The useful habit to carry forward is simple: when a value looks right, ask what would make it wrong—and build an experiment that can tell the difference.
 
+## Continue with a larger example
+
+The next six chapters extend this foundation to named collections and multiple observations. Start with [strings and collections](15-strings-and-collections.md), then follow the [advanced lab](../labs/advanced.md) through capture comparison, replay, and a final investigation. The original fixture remains unchanged so you retain a small known-good baseline.
+
 ## Checkpoint
 
 Which additional evidence would you need before describing your capstone as a working hardware DMA reader?
@@ -86,6 +90,6 @@ Which additional evidence would you need before describing your capstone as a wo
 
 <!-- BOOK:FOOT:START -->
 
-[Previous: Reproducibility and tool design](13-reproducibility.md) · [Contents](../README.MD#table-of-contents) · [Practice labs](../labs/README.md)
+[Previous: Reproducibility and tool design](13-reproducibility.md) · [Contents](../README.MD#table-of-contents) · [Next: Strings and collections](15-strings-and-collections.md)
 
 <!-- BOOK:FOOT:END -->

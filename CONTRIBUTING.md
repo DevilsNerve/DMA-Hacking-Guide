@@ -38,6 +38,15 @@ The checks validate local destinations and fragments, navigation order, and exec
 
 For prose-only changes, run the book checker and whitespace check. Run the lab tests when modifying examples, expected output, or parser behavior. Keep generated images and scratch captures in `out/`; keep private captures outside the repository.
 
+For a navigation change, an optional [GitHub rendering checker](tools/verify_github_render.py) can validate the actual renderer:
+
+```sh
+python tools/verify_github_render.py source
+python tools/verify_github_render.py published
+```
+
+The first command requires an authenticated GitHub CLI and renders local Markdown through GitHub's API. The second requires a clean, already published commit and inspects its public pages for the referenced fragment destinations. Both make network requests, save inspection evidence under `out/`, and perform no publication or Actions operation. The source-render check validates links and custom anchors; the published check also verifies GitHub's generated heading anchors.
+
 ## GitHub Actions policy
 
 Do not create, enable, dispatch, or re-enable GitHub Actions without the repository owner's explicit approval. Implementing, checking, committing, pushing, or opening a pull request does not by itself authorize an Actions run. Inspect triggers, reusable/dependent workflows, required checks, and operational dependencies before an operation that can start automation. This repository uses local checks and does not need a workflow to validate the book.

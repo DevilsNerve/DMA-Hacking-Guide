@@ -125,4 +125,6 @@ The tests exercise valid decoding, malformed data, target-width handling, scanne
 
 Before moving on, explain why the signature match is a candidate, why the root slot is not the record, and why a failed read must not become a zero-valued field. Then complete the [capstone](../chapters/14-capstone.md) or return to [offsets and signatures](../chapters/04-offsets-and-signatures.md).
 
+For Chapters 15–20, continue to the [advanced observation lab](advanced.md). It introduces a separate format for Unicode text, identified collections, capture comparison, and replay. Keep this first lab as the smaller baseline for pointer-width and exact-read behavior.
+
 [Back to contents](../README.MD#table-of-contents)

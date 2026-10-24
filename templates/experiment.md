@@ -19,6 +19,8 @@ Copy this template into your own notes. Use `not applicable` when a field does n
 - Operating system and architecture:
 - Target identity, build, and pointer width:
 - Layout version and byte order:
+- Session and object identity rules:
+- Completeness or filtering of the observed collection:
 - Hardware, firmware, transport, and platform configuration when applicable:
 - Cache and refresh policy:
 
@@ -29,6 +31,8 @@ Copy this template into your own notes. Use `not applicable` when a field does n
 - Requested ranges and field widths:
 - Ground-truth observation from the producer:
 - Number of samples and time window:
+- For comparisons: both input identities and the field-equality policy:
+- For replay or polling: clock source, generation rule, and progress budget:
 
 ## Result
 

@@ -12,5 +12,11 @@
   {"file":"chapters/11-address-translation.md","title":"Address translation","description":"Page tables, page boundaries, and missing pages."},
   {"file":"chapters/12-performance.md","title":"Performance and freshness","description":"Batching, caches, latency distributions, and useful throughput."},
   {"file":"chapters/13-reproducibility.md","title":"Reproducibility and tool design","description":"Versioned layouts, evidence records, and dependable exports."},
-  {"file":"chapters/14-capstone.md","title":"Build a trustworthy reader","description":"An end-to-end project with measurable acceptance criteria."}
+  {"file":"chapters/14-capstone.md","title":"Build a trustworthy reader","description":"An end-to-end project with measurable acceptance criteria."},
+  {"file":"chapters/15-strings-and-collections.md","title":"Strings and collections","description":"Decode text and variable-length records with explicit units and bounds."},
+  {"file":"chapters/16-modules-and-symbols.md","title":"Modules, symbols, and build identity","description":"Relate loaded addresses, file bytes, symbols, and exact builds."},
+  {"file":"chapters/17-comparing-captures.md","title":"Comparing captures","description":"Separate layout changes from meaningful changes in application state."},
+  {"file":"chapters/18-polling-and-replay.md","title":"Polling and replay","description":"Handle duplicates, failures, generation changes, and observation age."},
+  {"file":"chapters/19-testing-layouts.md","title":"Testing unfamiliar layouts","description":"Challenge a decoder with boundaries, mutations, and independent evidence."},
+  {"file":"chapters/20-complete-investigation.md","title":"A complete investigation","description":"Turn several captures and a replay trace into a defensible conclusion."}
 ]
