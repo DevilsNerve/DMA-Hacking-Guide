@@ -46,6 +46,7 @@ The examples use synthetic data and programs you control. The practical goal is 
 - [Advanced lab for Chapters 15–20](labs/advanced.md)
 - [Glossary](appendices/glossary.md)
 - [Checkpoint answers](appendices/answers.md)
+- [Worked exercises for Chapters 15–20](appendices/deep-dive-answers.md)
 - [Sources and further reading](appendices/resources.md)
 - [Corrections to the earlier guide](appendices/corrections.md)
 - [Experiment record template](templates/experiment.md)
@@ -69,6 +70,8 @@ Use [Unity layouts](chapters/10-unity.md), [translation](chapters/11-address-tra
 ### Continue beyond the first capstone
 
 Chapters [15](chapters/15-strings-and-collections.md) through [20](chapters/20-complete-investigation.md) take you from one record to a small investigation: decode a named collection, distinguish module and file locations, compare captures by identity, replay failures, and test the assumptions behind your conclusion. Follow the [advanced lab](labs/advanced.md) alongside these chapters. It uses ordinary Python and synthetic observations, so you can reproduce the results without a device.
+
+Each of these chapters includes a local contents list, detailed calculations, failure analysis, and four additional exercises with [worked solutions](appendices/deep-dive-answers.md). The [calculation tools](labs/advanced.md#detailed-walkthroughs) reproduce section mapping, numeric precision, replay state, and the final evidence report.
 
 <a id="topic-finder"></a>
 ## Find a specific answer

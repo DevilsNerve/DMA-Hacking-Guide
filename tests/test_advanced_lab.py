@@ -95,6 +95,26 @@ class AdvancedDecodeTests(unittest.TestCase):
             decode(data[:-1])
         self.assertEqual(decode(data), decode(data + bytes(17)))
 
+    def test_exact_image_limit_and_empty_payload_positions(self):
+        baseline = make_case("before")
+        at_limit = baseline + bytes(4096 - len(baseline))
+        self.assertEqual(decode(at_limit), decode(baseline))
+        with self.assertRaisesRegex(DecodeError, "image size"):
+            decode(at_limit + b"\x00")
+        empty = bytes.fromhex("4f42533202002000000000000000000000000000000000002000000020000000")
+        self.assertEqual(decode(empty), Snapshot("", 0, ()))
+        wrong_empty_offset = empty[:28] + bytes(4)
+        with self.assertRaisesRegex(DecodeError, "range"):
+            decode(wrong_empty_offset)
+
+    def test_literal_surrogate_pair_and_array_before_name(self):
+        compass = bytes.fromhex("4f425332020020000000000000000000000000000200000020000000240000003ed8eddd")
+        self.assertEqual(decode(compass), Snapshot("\U0001f9ed", 0, ()))
+        header = bytes.fromhex("4f42533202002000020000000000000001000000010000003000000020000000")
+        record = bytes.fromhex("0a0000000000af420000803f00000040")
+        self.assertEqual(decode(header + record + b"A\x00"),
+                         Snapshot("A", 2, (Entity(10, 87.5, 1, 2),)))
+
     def test_duplicate_and_zero_identifiers(self):
         for position, identifier in ((48, 0), (64, 10)):
             data = bytearray(make_case("before"))
@@ -155,6 +175,16 @@ class AdvancedDecodeTests(unittest.TestCase):
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_distinct_binary32_values_have_distinct_reported_values(self):
+        left = struct.unpack("<f", bytes.fromhex("cdcccc3d"))[0]
+        right = struct.unpack("<f", bytes.fromhex("cecccc3d"))[0]
+        before = decode(encode(Snapshot("", 1, (Entity(1, left, 0, 0),))))
+        after = decode(encode(Snapshot("", 2, (Entity(1, right, 0, 0),))))
+        self.assertNotEqual(left, right)
+        self.assertEqual(compare(before, after).changed, ("1.health:0.100000001->0.100000009",))
+        for value in (left, right):
+            self.assertEqual(struct.pack("<f", float(f"{value:.9g}")), struct.pack("<f", value))
+
     def test_relocation_and_reordering_preserve_meaning(self):
         before, moved = make_case("before"), make_case("relocated")
         self.assertNotEqual(hashlib.sha256(before).digest(), hashlib.sha256(moved).digest())
@@ -262,6 +292,15 @@ class AdvancedCliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             self.assertEqual(self.cli("inspect", str(Path(directory) / "missing.obs")).returncode, 1)
         self.assertEqual(self.cli("create", "unused.obs", "--case", "unknown").returncode, 2)
+
+    def test_inspection_keeps_binary32_precision(self):
+        value = struct.unpack("<f", bytes.fromhex("cecccc3d"))[0]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "precision.obs"
+            path.write_bytes(encode(Snapshot("", 1, (Entity(1, value, 0, 0),))))
+            result = self.cli("inspect", str(path))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("health=0.100000009", result.stdout)
 
     def test_chapter_python_examples(self):
         examples = (("15-strings-and-collections.md", "7 8 16\nTrue\n"),

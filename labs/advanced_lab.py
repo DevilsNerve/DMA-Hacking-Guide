@@ -147,7 +147,7 @@ def compare(before: Snapshot, after: Snapshot) -> Comparison:
         for field in ("health", "x", "y"):
             left, right = getattr(old[identifier], field), getattr(new[identifier], field)
             if left != right:
-                changes.append(f"{identifier}.{field}:{left:g}->{right:g}")
+                changes.append(f"{identifier}.{field}:{left:.9g}->{right:.9g}")
     return Comparison(before.generation, after.generation, before.label != after.label,
                       tuple(sorted(new.keys() - old.keys())), tuple(sorted(old.keys() - new.keys())),
                       tuple(changes))
@@ -210,7 +210,7 @@ def show(snapshot: Snapshot) -> None:
     print(f"label={ascii(snapshot.label)} generation={snapshot.generation} entities={len(snapshot.entities)}")
     print(f"ids={[item.identifier for item in snapshot.entities]}")
     for item in snapshot.entities:
-        print(f"id={item.identifier} health={item.health:g} x={item.x:g} y={item.y:g}")
+        print(f"id={item.identifier} health={item.health:.9g} x={item.x:.9g} y={item.y:.9g}")
 
 
 def main(argv: list[str] | None = None) -> int:

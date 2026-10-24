@@ -81,6 +81,8 @@ The first comparison reports generation `2->2`, no label change, empty added/rem
 
 The second comparison reports the four lines at the end of the demo output. It matches by unique ID, sorts reported changes, and compares health/x/y numerically. Positive and negative zero compare equal. Inputs containing NaN or infinity are rejected before comparison.
 
+Inspection and change reports use nine significant digits for binary32 fields. This preserves visible distinctions between adjacent finite values that a shorter display could round to the same text. It does not change the stored bytes or the exact numeric comparison policy.
+
 Both images must decode successfully before any comparison output is printed. A missing or invalid second file must not look like an empty collection whose objects were all removed.
 
 ## Replay failures without waiting
@@ -117,6 +119,57 @@ python -m unittest discover -s tests -p test_advanced_lab.py -v
 The command-line contract is success status 0, operational/input failure status 1, and argument-parser error status 2. A semantic comparison with no changes is a successful result. An invalid format is a failure, even if its filename ends in `.obs`.
 
 The fixed-seed mutation cases are bounded experiments. Passing them is evidence about those cases, not an exhaustive proof of parser correctness or a performance benchmark.
+
+<a id="detailed-walkthroughs"></a>
+## Reproduce the detailed chapter calculations
+
+The companion [deep-dive tool](deep_dive.py) uses only the Python standard library:
+
+```sh
+python labs/deep_dive.py sections
+python labs/deep_dive.py precision
+python labs/deep_dive.py trace
+python labs/deep_dive.py evidence
+```
+
+`sections` checks the six complete-range requests in [Chapter 16](../chapters/16-modules-and-symbols.md#image-model). Its three rejected requests are expected demonstration outcomes, so the demonstration itself exits successfully:
+
+```text
+rva=0x1250 length=4 file=0x650
+rva=0x13f8 length=8 file=0x7f8
+rva=0x13f8 length=16 rejected: virtual range has no complete stored counterpart
+rva=0x1450 length=4 rejected: virtual range has no complete stored counterpart
+rva=0x2100 length=16 file=0x900
+rva=0x3000 length=1 rejected: virtual range has no complete stored counterpart
+```
+
+The mapper is a restricted geometry model, not a PE parser. It requires 1–96 sections with nonempty, nonoverlapping virtual extents; integer metadata and requests fit the declared 32-bit address space, and all declared raw ranges must fit the file. It rejects empty requests. Header mapping, alignment, directory semantics, and loader transformations are outside the model.
+
+`precision` shows the raw encodings and two display precisions for adjacent binary32 values:
+
+```text
+bytes=cdcccc3d decoded=0.10000000149011612 display=0.100000001
+bytes=cecccc3d decoded=0.10000000894069672 display=0.100000009
+1.health:0.100000001->0.100000009
+```
+
+`trace` prints every post-event monitor state:
+
+```text
+at_ms status accepted_generation last_observation_ms last_progress_ms
+0 accepted 2 0 0
+10 duplicate 2 10 0
+20 unavailable 2 20 0
+30 invalid 2 30 0
+40 accepted 4 40 40
+50 regressed 4 50 40
+60 inconsistent 4 60 40
+200 no-progress 4 200 40
+```
+
+`evidence` prints a JSON reference report containing fixture hashes, sizes, generations, storage IDs, comparison lines, and replay states with input hashes. It regenerates reference fixtures in memory; it does not read or verify earlier files on disk. No command writes an evidence file automatically or accesses a process or device. Retain actual file-creation and inspection outputs separately when completing the investigation.
+
+The [focused tests](../tests/test_deep_dive.py) cover mapping boundaries, ambiguous metadata, truncated backing, width limits, replay state, and the reference artifact hashes. The [worked answers](../appendices/deep-dive-answers.md) explain all 24 chapter exercises.
 
 ## Complete the investigation
 

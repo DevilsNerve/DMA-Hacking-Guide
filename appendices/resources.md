@@ -10,7 +10,11 @@ References reviewed on **2026-10-23**. These are primary documentation sources. 
 | --- | --- |
 | [Linux kernel DMA mapping guide](https://docs.kernel.org/core-api/dma-api-howto.html) | CPU, physical, and device addresses; DMA mapping responsibilities |
 | [Microsoft PE format](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format) | RVA terminology, executable sections, and on-disk versus loaded representation |
+| [IMAGE_SECTION_HEADER](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-image_section_header) | Declared section fields and raw versus virtual extents |
+| [ImageRvaToVa](https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-imagervatova) | Resolving an RVA in a locally mapped file image |
 | [Windows debugging symbols](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbols) | Matching symbol information to the module under investigation |
+| [SymFindFileInPath](https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-symfindfileinpath) | Symbol-file identification parameters, including format-dependent IDs and age |
+| [Public and private symbols](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/public-and-private-symbols) | Which information a symbol artifact may contain |
 | [ReadProcessMemory](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory) | Windows software-read permissions and return contract |
 | [Windows memory protection constants](https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants) | Page protections and guard-page behavior |
 | [Windows Kernel DMA Protection](https://learn.microsoft.com/en-us/windows/security/hardware-security/kernel-dma-protection-for-thunderbolt) | Platform support, remapping, and checking the configured state |
@@ -46,12 +50,17 @@ The optional Unity component is an instructional exercise, not a bundled or vali
 | --- | --- |
 | [Python struct module](https://docs.python.org/3/library/struct.html) | Explicit byte order, standard widths, and binary decoding |
 | [Python Unicode HOWTO](https://docs.python.org/3/howto/unicode.html) | Code points, encodings, and the distinction between text and bytes |
+| [Unicode 17 core specification, Chapter 3](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/) | Encoding forms, Unicode scalar values, and surrogate-pair rules; this is a pinned edition |
+| [Unicode normalization](https://unicode.org/reports/tr15/) | Canonical and compatibility normalization and their defined scope |
+| [Python floating-point tutorial](https://docs.python.org/3/tutorial/floatingpoint.html) | Stored binary values, decimal presentation, and rounding |
+| [Python math.isclose](https://docs.python.org/3/library/math.html#math.isclose) | Relative and absolute tolerance semantics |
+| [Python unittest assertions](https://docs.python.org/3/library/unittest.html#unittest.TestCase.assertRaises) | Testing expected exceptions and public outcomes |
 | [Python time module](https://docs.python.org/3/library/time.html#time.monotonic) | Monotonic elapsed-time measurement and clock semantics |
 | [GitHub Markdown syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) | Relative links, heading links, and custom anchors |
 
 ## Advanced lab evidence
 
-Chapters 15–20 use the repository's [advanced lab](../labs/advanced.md) for their original worked examples. Its schemas, captures, timings, and state changes are invented and locally reproducible. The section-mapping calculation in Chapter 16 is an explanatory example, not an executable-image parser. Replay timestamps are supplied inputs, not measured device latency.
+Chapters 15–20 use the repository's [advanced lab](../labs/advanced.md) and [calculation tools](../labs/advanced.md#detailed-walkthroughs) for their original worked examples. Their schemas, captures, timings, and state changes are invented and locally reproducible. The section-mapping calculation in Chapter 16 has an executable restricted geometry model; it is not an executable-image parser. Replay timestamps are supplied inputs, not measured device latency. The [worked exercise answers](deep-dive-answers.md) retain the same evidence boundaries.
 
 ## How to add a source
 
