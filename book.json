@@ -1,0 +1,16 @@
+[
+  {"file":"chapters/01-start-here.md","title":"Start here","description":"What DMA does, what you will learn, and where to begin."},
+  {"file":"chapters/02-memory-foundations.md","title":"Memory foundations","description":"Bytes, types, pointers, address spaces, and object lifetime."},
+  {"file":"chapters/03-tools-and-lab.md","title":"Tools and your first lab","description":"A useful setup and a first result without hardware."},
+  {"file":"chapters/04-offsets-and-signatures.md","title":"Offsets and signatures","description":"Find, describe, and validate locations without guessing."},
+  {"file":"chapters/05-acquisition.md","title":"Acquisition","description":"Connect the source, transport, translation, and analysis layers."},
+  {"file":"chapters/06-reading-memory.md","title":"Reading memory reliably","description":"Exact reads, bounded decoding, and consistency."},
+  {"file":"chapters/07-controlled-experiments.md","title":"Controlled experiments","description":"Change known inputs and distinguish observation from causation."},
+  {"file":"chapters/08-protections-and-observability.md","title":"Protections and observability","description":"IOMMUs, permissions, and the limits of visibility claims."},
+  {"file":"chapters/09-troubleshooting.md","title":"Troubleshooting","description":"Work from a symptom to the smallest discriminating check."},
+  {"file":"chapters/10-unity.md","title":"Unity in practice","description":"Mono, IL2CPP, managed objects, and your own instrumented build."},
+  {"file":"chapters/11-address-translation.md","title":"Address translation","description":"Page tables, page boundaries, and missing pages."},
+  {"file":"chapters/12-performance.md","title":"Performance and freshness","description":"Batching, caches, latency distributions, and useful throughput."},
+  {"file":"chapters/13-reproducibility.md","title":"Reproducibility and tool design","description":"Versioned layouts, evidence records, and dependable exports."},
+  {"file":"chapters/14-capstone.md","title":"Build a trustworthy reader","description":"An end-to-end project with measurable acceptance criteria."}
+]
